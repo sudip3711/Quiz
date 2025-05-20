@@ -9,8 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,6 +16,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -34,10 +33,14 @@ import java.util.Map;
 public class SecurityConfig {
 
     @Autowired
-    private MyUserDetailsService myUserDetailsService;
-
+    MyUserDetailsService myUserDetailsService;
     @Autowired
-    private JwtFilter jwtFilter;
+    private final JwtFilter jwtFilter;
+
+    public SecurityConfig(MyUserDetailsService myUserDetailsService, JwtFilter jwtFilter) {
+        this.myUserDetailsService = myUserDetailsService;
+        this.jwtFilter = jwtFilter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -47,9 +50,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/user/login",
-                                "/user/register"
-                                // "/swagger-ui/**",
-                                // "/v3/api-docs/**"
+                                "/user/register",
+                                "/healthcheck"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -64,8 +66,7 @@ public class SecurityConfig {
 
     private void handleAuthenticationError(HttpServletRequest request,
                                            HttpServletResponse response,
-                                           AuthenticationException authException)
-            throws IOException {
+                                           AuthenticationException authException) throws IOException {
         response.setContentType("application/json");
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 
@@ -79,10 +80,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-        configuration.setAllowedOrigins(List.of("https://quiz-application-liart-nine.vercel.app"));
-
-
+        configuration.setAllowedOrigins(List.of(
+                "https://quiz-application-liart-nine.vercel.app",
+                "https://*.up.railway.app"
+        ));
         configuration.setAllowedMethods(List.of("*"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -93,11 +94,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(myUserDetailsService);
-        provider.setPasswordEncoder(new BCryptPasswordEncoder());
-        return provider;
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean

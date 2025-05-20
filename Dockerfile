@@ -1,9 +1,10 @@
-FROM eclipse-temurin:17-jdk AS build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 COPY . .
 RUN ./mvnw clean package -DskipTests
 
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/target/Quiz-0.0.1-SNAPSHOT.jar app.jar
-CMD ["java", "-jar", "app.jar", "--server.port=${PORT}"]
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE ${PORT}
+CMD ["java", "-Xmx512m", "-jar", "app.jar", "--spring.profiles.active=prod"]
