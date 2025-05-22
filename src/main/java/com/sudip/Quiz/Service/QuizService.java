@@ -109,6 +109,26 @@ public class QuizService {
 
 
 
+//    public AvailabilityDTO getQuizWithAvailability(Integer id) {
+//        QuizSummary summary = quizRepo.findTitlesByQuizId(id);
+//        if (summary == null) {
+//            throw new RuntimeException("Quiz not found with id: " + id);
+//        }
+//
+//        boolean isAvailable = isQuizAvailable(summary);
+//        return new AvailabilityDTO(summary, isAvailable);
+//    }
+//
+//
+//
+//    private boolean isQuizAvailable(QuizSummary summary) {
+//        LocalDateTime now = LocalDateTime.now();
+//        return now.isAfter(summary.getQuizStartTime()) &&
+//                now.isAfter(summary.getQuizStartTime()) &&
+//                now.isBefore(summary.getQuizEndTime());
+//    }
+
+
     public AvailabilityDTO getQuizWithAvailability(Integer id) {
         QuizSummary summary = quizRepo.findTitlesByQuizId(id);
         if (summary == null) {
@@ -119,15 +139,12 @@ public class QuizService {
         return new AvailabilityDTO(summary, isAvailable);
     }
 
-
-
     private boolean isQuizAvailable(QuizSummary summary) {
         LocalDateTime now = LocalDateTime.now();
-        return now.isAfter(summary.getQuizStartTime()) &&
+        return summary.getQuizStartTime() != null && summary.getQuizEndTime() != null &&
                 now.isAfter(summary.getQuizStartTime()) &&
                 now.isBefore(summary.getQuizEndTime());
     }
-
 
 
 
